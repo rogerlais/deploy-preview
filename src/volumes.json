@@ -1,0 +1,47 @@
+[
+  {
+    "alias": "sistema",
+    "shares": [{ "name": "sistema" }],
+    "size": "90194313216",
+    "version": "${GLOBAL_VERSION}"
+  },
+  {
+    "alias": "critico",
+    "shares": [{ "name": "critico" }],
+    "size": "5368709120",
+    "version": "${GLOBAL_VERSION}"
+  },
+  {
+    "alias": "outros",
+    "shares": [
+      { "name": "suporte" },
+      { "name": "espelho" }
+    ],
+    "size": "214748364800",
+    "version": "${GLOBAL_VERSION}"
+  },
+  {
+    "alias": "entrada",
+    "shares": [{ "name": "entrada" }],
+    "size": "53687091200",
+    "version": "${GLOBAL_VERSION}"
+  },
+  {
+    "alias": "publico",
+    "shares": [{ "name": "publico" }],
+    "size": "53687091200",
+    "version": "${GLOBAL_VERSION}"
+  },
+  {
+    "alias": "restrito",
+    "shares": [{ "name": "restrito" }],
+    "size": "214748364800",
+    "version": "${GLOBAL_VERSION}"
+  },
+  {
+    "alias": "backup",
+    "shares": [{ "name": "backup" }],
+    "size": "1000000000000",
+    "version": "${GLOBAL_VERSION}"
+  }
+]

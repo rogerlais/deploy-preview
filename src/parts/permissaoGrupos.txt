@@ -1,0 +1,61 @@
+#!/bin/bash
+
+echo "Permissao para grupos do Dominio"
+echo "Digite o usuario do NAS: " ; read usernas
+echo "Digite a Senha do NAS: " ; read -ers pwnas
+qcli -l user=$usernas pw=$pwnas saveauthsid=yes
+
+#Esse While serve para um tratamento de erro, ao verificar que o comando não teve sucesso ele solicita o usuário e senha novamente
+while [ $? != 0 ]         
+do                                   
+echo "Digite o User do NAS: " ; read usernas                      
+echo "Digite a Senha do NAS: " ; read -ers pwnas                  
+qcli -l user=$usernas pw=$pwnas saveauthsid=yes     
+done
+
+echo "Digite Qual a Zona Eleitoral: " ; read zona
+if [ $zona -lt 10 ]                                                                                                   
+	then                                                                                                                 
+   		zona=0"$zona"                                                                                                                                                                                                         
+  		echo $zona                                                                                                                
+	fi
+#Se necessário se o NAS só saiu do domínio não tem necessidade pois a pasta espelho já foi criada
+#Criando a pasta de compartilhamento ESPELHO, ela não é criada automáticamente porque ela não possui volume próprio e fica dentro de outros
+#qcli_sharedfolder -s sharename=Espelho volumeID=2 
+
+echo "Permissao para grupos do Dominio" | tee -a logNAS.txt
+
+
+qcli_sharedfolder -B sharename=Publico domain_grouprw='ZNE-PB001\G_SEINF_ADMINS' | tee -a logNAS.txt
+qcli_sharedfolder -B sharename=Restrito domain_grouprw='ZNE-PB001\G_SEINF_ADMINS' | tee -a logNAS.txt
+qcli_sharedfolder -B sharename=Critico domain_grouprw='ZNE-PB001\G_SEINF_ADMINS' | tee -a logNAS.txt
+qcli_sharedfolder -B sharename=Outros domain_grouprw='ZNE-PB001\G_SEINF_ADMINS' | tee -a logNAS.txt
+qcli_sharedfolder -B sharename=Espelho domain_grouprw='ZNE-PB001\G_SEINF_ADMINS' | tee -a logNAS.txt
+
+qcli_sharedfolder -B sharename=Publico domain_grouprw='ZNE-PB001\G_SESOP_ADMINS' | tee -a logNAS.txt
+qcli_sharedfolder -B sharename=Restrito domain_grouprw='ZNE-PB001\G_SESOP_ADMINS' | tee -a logNAS.txt
+qcli_sharedfolder -B sharename=Critico domain_grouprw='ZNE-PB001\G_SESOP_ADMINS' | tee -a logNAS.txt
+qcli_sharedfolder -B sharename=Outros domain_grouprw='ZNE-PB001\G_SESOP_ADMINS' | tee -a logNAS.txt
+qcli_sharedfolder -B sharename=Espelho domain_grouprw='ZNE-PB001\G_SESOP_ADMINS' | tee -a logNAS.txt
+
+qcli_sharedfolder -B sharename=Outros domain_grouprd='ZNE-PB001\G_SIS_ADMINS' | tee -a logNAS.txt
+
+
+qcli_sharedfolder -B sharename=Publico domain_grouprw='ZNE-PB001\setorGsesop' | tee -a logNAS.txt
+qcli_sharedfolder -B sharename=Restrito domain_grouprw='ZNE-PB001\setorGsesop' | tee -a logNAS.txt
+qcli_sharedfolder -B sharename=Critico domain_grouprw='ZNE-PB001\setorGsesop' | tee -a logNAS.txt
+qcli_sharedfolder -B sharename=Outros domain_grouprw='ZNE-PB001\setorGsesop' | tee -a logNAS.txt
+qcli_sharedfolder -B sharename=Espelho domain_grouprw='ZNE-PB001\setorGsesop' | tee -a logNAS.txt
+
+
+qcli_sharedfolder -B sharename=Publico domain_grouprd='ZNE-PB001\Domain Users' | tee -a logNAS.txt
+qcli_sharedfolder -B sharename=Entrada domain_grouprw='ZNE-PB001\Domain Users' | tee -a logNAS.txt
+
+
+qcli_sharedfolder -B sharename=Publico domain_grouprw='ZNE-PB001\setorGzon${zona}' | tee -a logNAS.txt
+qcli_sharedfolder -B sharename=Restrito domain_grouprw='ZNE-PB001\setorGzon${zona}' | tee -a logNAS.txt
+qcli_sharedfolder -B sharename=Critico domain_grouprw='ZNE-PB001\setorGzon${zona}' | tee -a logNAS.txt
+qcli_sharedfolder -B sharename=Outros domain_grouprd='ZNE-PB001\setorGzon${zona}' | tee -a logNAS.txt
+qcli_sharedfolder -B sharename=Espelho domain_grouprd='ZNE-PB001\setorGzon${zona}' | tee -a logNAS.txt
+
+

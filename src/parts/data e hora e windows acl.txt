@@ -1,0 +1,18 @@
+
+echo "Script configurando Qnap NAS"
+echo "Digite o User do NAS: " ; read usernas
+echo "Digite a Senha do NAS: " ; read -ers pwnas
+
+#autorizacao do qcli para poder executar os comandos
+#comando tee exibe na tela e grava em um arquivo o log
+qcli -l user=$usernas pw=$pwnas saveauthsid=yes | tee -a logNAS.txt
+
+#Habilitar Windows ACL
+echo "Habilitando Windows ACL" | tee -a logNAS.txt
+qcli_sharedfolder -p WinACLEnabled=1 | tee -a logNAS.txt
+
+#exemplo de como escrever entre chaves para o sifrao nao ignorar o resto do texto
+
+#configurando data e hora
+echo "Configurando Data e hora" | tee -a logNAS.txt
+qcli_timezone -s timezone=17 dateformat=1 timeformat=24 timesetting=2 server=ntp.tre-pb.gov.br interval_type=2 timeinterval=7 AMPM_option=PM | tee -a logNAS.txt

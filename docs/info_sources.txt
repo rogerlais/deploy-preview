@@ -1,0 +1,60 @@
+[Base de conhecimento]
+https://www.qnap.com/en/how-to/knowledge-base
+
+[Montagem de caminho para autorun.sh e customizar um startup]
+https://www.qnap.com/en/how-to/faq/article/running-your-own-application-at-startup
+
+[Reset do NAS]
+https://www.qnap.com/en/how-to/knowledge-base/article/the-different-ways-of-resetting-your-nas-explained
+
+[QPKG - instalador por linha de comando]
+http://qnapsupport.net/what-is-qpkg-how-to-use/
+
+[Update de firmware por linha de comando]
+https://www.qnap.com/en/how-to/knowledge-base/article/manually-upgradedowngrade-firmware-by-ssh
+
+[How to set up a proxy server on QNAP Turbo NAS? - Pode gerar a autenticação provisória para acesso a recursos da internet - baixar updates e instalar apps por exemplo]
+https://www.qnap.com/en/how-to/tutorial/article/how-to-set-up-a-proxy-server-on-qnap-turbo-nas
+
+[Sugere que podemos ter repositoório com os pacotes e usar por linha de comando]
+https://www.qnap.com/en/how-to/knowledge-base/article/how-to-install-qnap-applications-qpkg-files-manually
+
+[comandos básicos]
+https://www.qnap-singapore.com/guides/qnap-basic-linux-commands/
+
+[Acesso SSH - meio furado]
+https://www.qnap.com/en/how-to/knowledge-base/article/how-do-i-access-my-qnap-nas-using-ssh
+
+[Troca das chaves/certificados - ainda não entendido plenamente o uso]
+https://www.qnap.com/en/how-to/knowledge-base/article/how-to-replace-ssl-certificate-manually-on-ssh-console
+
+[Desabilitar a conta admin com delegação para outra conta ao menos]
+https://www.qnap.com/en/how-to/tutorial/article/how-to-disable-the-admin-user-account
+
+[Busca geral]
+https://www.qnap.com/en/search?tab=resource
+
+[Update de BIOS - bronca grande]
+https://www.qnap.com/en/how-to/tutorial/article/updating-the-bios-on-a-qnap-nas
+
+[uso do mattermost - teamware]
+https://www.qnap.com/en/how-to/tutorial/article/mattermost-user-guide
+
+[VCam - captura de imagens por camera de segurança]
+https://www.qnap.com/en/how-to/tutorial/article/how-to-use-vcam
+
+[Virtualization Station 3]
+https://www.qnap.com/en/how-to/tutorial/article/how-to-use-virtualization-station-3
+https://www.qnap.com/en/how-to/tutorial/article/how-to-use-virtualization-station
+
+[How to use and set up your Network & Virtual switch? ]
+https://www.qnap.com/en/how-to/tutorial/article/how-to-use-and-set-up-your-network-virtual-switch
+
+[How to update your QNAP NAS’s firmware?]
+https://www.qnap.com/en/how-to/tutorial/article/how-to-update-your-qnap-nass-firmware
+
+[How to set up the Surveillance Station of QNAP NAS?]
+https://www.qnap.com/en/how-to/tutorial/article/how-to-set-up-the-surveillance-station-of-qnap-nas
+
+[What is the best practice for enhancing NAS security?]
+https://www.qnap.com/en/how-to/faq/article/what-is-the-best-practice-for-enhancing-nas-security

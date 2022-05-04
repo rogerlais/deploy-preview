@@ -1,0 +1,17 @@
+#!/bin/bash
+
+echo "Script configurando Qnap NAS"
+echo "Digite o User do NAS: " ; read usernas
+echo "Digite a Senha do NAS: " ; read -ers pwnas
+
+#autorizacao do qcli para poder executar os comandos
+#comando tee exibe na tela e grava em um arquivo o log
+qcli -l user=$usernas pw=$pwnas saveauthsid=yes | tee -a logNAS.txt
+
+echo Digite uma Zona eleitoral: ; read zona 
+
+
+qcli_network -m interfaceID=eth0 IPType=STATIC IP=10.183.${zona}.210 netmask=255.255.255.0 gateway=10.183.${zona}.70 dns_type=manual dns1=10.12.0.134 dns2=10.12.0.228| tee -a logNAS.txt
+
+
+

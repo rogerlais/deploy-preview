@@ -1,0 +1,10 @@
+Volume Count
+7
+Alias    volumeID Capacity Status
+entrada  1        48 GB    #!Ready
+sistema$ 2        81 GB    Ready
+critico  3        4 GB     Ready
+outros   4        195 GB   Ready
+publico  5        48 GB    Ready
+restrito 6        195 GB   Ready
+backup   7        915 GB   Ready

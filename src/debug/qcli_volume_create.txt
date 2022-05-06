@@ -1,0 +1,3 @@
+Creating volume 1...
+Use qcli_volume -i to check status!
+#! RAS: 3rd from 1st line is volumeID generated

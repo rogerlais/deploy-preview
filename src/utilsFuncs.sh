@@ -71,6 +71,27 @@ VOLUME_DATA=$(
 	END
 )
 
+function switch_simulated_qcli() {
+	# shellcheck source=/dev/null
+	source "${PWD}/qcli_simulated.sh"
+}
+
+function create_secondary_share() {
+	local ret_create_secondary_share=$1
+	local sharename=$2
+	local volID=$3
+	local -i ret_create_secondary_share=0
+	qcli_sharedfolder -i sharename="$sharename" &>/dev/null #Gera erro para sharename invalido
+	if [[ $? ]]; then
+		echo "Novo comparilhamento secundário em criação $sharename no volume $volID" | slog 6
+		qcli_sharedfolder -s sharename="$sharename" volumeID="$volID" &>/dev/null #convert volumeID base 0 to 1
+		#*saida comando acima abaixo reproduzida abaixo, omitida no console:
+		#Please use qcli_sharedfolder -i, qcli_sharedfolder -u & qcli_sharedfolder -f to check status!
+		ret_create_secondary_share=$?
+	fi
+	printf -v "$1" "%d" "$ret_create_secondary_share"
+}
+
 function test_json() {
 	#todo levar para lib o teste de json( 0 - sucesso, 1 - falha, 4 - inválido)
 	#Ref.: https://stackoverflow.com/questions/46954692/check-if-string-is-a-valid-json-with-jq
@@ -85,13 +106,13 @@ function test_json() {
 function create_volumes() {
 	#recebe o caminho para o json com os dados dos volumes
 	local jsonfile="$1"
-	local -i ret volCount volIdx shareIdx
+	local -i ret_create_volumes volCount volIdx shareIdx
 	local alias shares size primaryShareName
 
-	ret=$(test_json "${jsonfile}")
-	if [[ ret -ne 0 ]]; then
-		echo "Parser do JSON com os dados dos volumes não poder ser lido( $ret )" | slog 3
-		return "$ret"
+	ret_create_volumes=$(test_json "${jsonfile}")
+	if [[ ret_create_volumes -ne 0 ]]; then
+		echo "Parser do JSON com os dados dos volumes não poder ser lido( $ret_create_volumes )" | slog 3
+		return "$ret_create_volumes"
 	fi
 
 	volCount=$(jq "length" "$jsonfile")
@@ -112,26 +133,13 @@ function create_volumes() {
 				for ((shareIdx = 1; shareIdx < shareCount; shareIdx++)); do #Salta o indice 0 por ter sido feito junto com volume acima
 					secShareName=$(echo "$shares" | jq -r ".[$shareIdx].name")
 					echo "Novo compartilhamento secundário: $secShareName"
-					qcli_sharedfolder -s sharename="$secShareName" volumeID="$((volIdx + 1))" #convert volumeID base 0 to 1
+					create_secondary_share ret_create_volumes "$secShareName" "$((volIdx + 1))" #convert volumeID base 0 to 1
 				done
 			fi
 		else
 			echo "Erro criando volume $alias" | slog 2
 		fi
 	done
-	# while read -r item; do
-	# 	((cnt++))
-	# 	alias=$(jq -r '.alias' <<<"$item")
-	# 	sharename=$(jq -r '.sharename' <<<"$item") #!Pode haver diversos compartilhamentos para cada volume
-	# 	size=$(jq -r '.size' <<<"$item")
-	# 	echo "Volume Index<$cnt>"
-	# 	echo "Alias: $alias"
-	# 	echo "Sharename: $sharename"
-	# 	echo "Size: $size"
-	# 	echo "Criando volume <$cnt>"
-	# 	create_vol "$alias" "sharename" "$size"
-	# done <<<"$(echo "$jsonfile" | jq -c -r '.[]')"
-
 	#todo Ao finalizar, repetir a saída de "qcli_volume -i" e esperar que os volumes sejam formatados
 	#sample = watch -g -n 5 'date +%H:%M'
 }
@@ -197,8 +205,7 @@ function get_abs_value() {
 	#Valores flutuantes com ponto como separador
 	pool_size="${1}"
 	vol_percent="${2}"
-	RESULT=$(awk "BEGIN {printf \"%d\",${pool_size}*${vol_percent}/100}") #Saida com inteiro livre
-	echo "${RESULT}"
+	awk "BEGIN {printf \"%d\",${pool_size}*${vol_percent}/100}" #Saida com inteiro livre
 }
 
 function truncToInt() {
@@ -210,20 +217,9 @@ function get_root_login() {
 	#Passar texto plano para esta rotina de autenticação
 	local login=$2
 	local pwd=$3
-
-	if [[ $__IS_DEBUG ]]; then
-		if [[ $login = 'admin' ]] && [[ "$pwd" = '12345678' ]]; then
-			printf -v "$1" "%d" "$?"
-			return 0
-		else
-			printf -v "$1" "%s" "Valores diferentes do esperado para a depuração"
-			return 1
-		fi
-	fi
 	#Chamada para a autenticação do cliente na CLI
-	qcli -l user="$2" pw="$3" saveauthsid=yes
+	qcli -l user="$login" pw="$pwd" saveauthsid=yes #* é gerado um sid aqui, talvez possa ser utils depois
 	printf -v "$1" "%d" "$?"
-	#* é gerado um sid aqui, talvez possa ser utils depois
 }
 
 function convertShortLongByteSize() {
@@ -249,14 +245,15 @@ function convertShortLongByteSize() {
 
 function get_pool_size() {
 	#Devolve o tamanho do pool de armazenamento, dado o seu indice(os valores são 1 based). Caso argumento omitido, retorna o valor para o poolId=1
+	local ret_get_pool_size
 	local poolID="$2"
 	if ! [ "$poolID" ]; then
 		poolID=1
 	fi
-	slog 7 "PoolID informado: $poolID"
-	ret=$(qcli_pool -i poolID=${poolID} displayfield=Capacity | sed -n '$p')
-	slog 7 "Valor bruto retornado: $ret"
-	printf -v "$1" "%s" "$ret" #gambiarra de retorno para primeiro arg
+	slog 7 "Lendo tamanho do PoolID( $poolID )"
+	ret_get_pool_size=$(qcli_pool -i poolID=${poolID} displayfield=Capacity | sed -n '$p')
+	slog 7 "Valor bruto retornado: $ret_get_pool_size"
+	printf -v "$1" "%s" "$ret_get_pool_size" #gambiarra de retorno para primeiro arg
 }
 
 function get_is_validZoneId() {
@@ -298,12 +295,15 @@ function setDeviceName() {
 }
 
 function get_pool_count() {
-	ret=$(qcli_pool -l | sed "2q;d")
-	echo "$ret"
+	local -i ret_get_pool_count
+	ret_get_pool_count=$(qcli_pool -l | sed "2q;d")
+	printf -v "$1" "%d" "$ret_get_pool_count"
 }
 
 function create_pool() {
-	if [[ $(get_pool_count) ]]; then
+	declare pc
+	get_pool_count pc
+	if [[ pc -eq 0 ]]; then
 		echo "Pool de armazenamento não encontrado. Um novo será criado"
 		echo "Esta operação pode demorar alguns minutos..."
 		qcli_pool -c diskID=00000001,00000002 raidLevel=1 Stripe=Disabled | slog 6
@@ -321,18 +321,14 @@ function check_vol() {
 	local sharename=$3
 	local volSize=$4 #180388626432 eg sistema
 
-	local response volCount volTable line result
+	local response volCount volTable line ret_check_vol
 
-	if [[ $__IS_DEV_ENV -eq 0 ]]; then
-		response=$(qcli_volume -i displayfield=Alias,Capacity)
-	else
-		response=$(<./input.txt)
-	fi
+	response=$(qcli_volume -i displayfield=Alias,volumeID,Capacity,Status)
 
+	ret_check_vol=$VOLUME_INEXISTS #resultado default
 	volCount=$(echo "$response" | sed -n "2p")
 	if [[ $volCount -le 0 ]]; then
 		echo "Pool não possui nenhum volume ainda"
-		result=$VOLUME_INEXISTS
 	else
 		volTable=$(tail -n +4 <<<"$response") #pula resumo e cabeçalho da saida
 		declare -a entries
@@ -341,32 +337,76 @@ function check_vol() {
 		done <<<"$volTable"
 
 		for line in "${entries[@]}"; do
-			if [[ "$line" == "$alias"* ]]; then #encontrado no começo da cadeia
+			if [[ "$line" == "$alias "* ]]; then #encontrado no começo da cadeia(nota para o espaço ao final como separador)
 				slog 7 "Alias encontrado($alias)"
-				IFS=' ' read -r -a parts <<<"$line"
+				IFS="$(printf '\t ')" read -r -a parts <<<"$line"
 				declare mant=0
 				declare bexp=''
 				convertLongShortByteSize mant bexp "$volSize"
-				if [[ "${parts[2]}" == "$bexp" ]]; then
-					checkTolerancePercent "$mant" "${parts[1]}" "5" #cinco e meio porcento
+				if [[ "${parts[3]}" == "$bexp" ]]; then
+					checkTolerancePercent "$mant" "${parts[2]}" "5" #cinco e meio porcento
 					if [ $? ]; then
-						result=$VOLUME_OK #Saida do caminho feliz
+						ret_check_vol=$VOLUME_OK #Saida do caminho feliz
 					else
-						result=$VOLUME_DIVERGENT
+						slog 7 "Erro/Tolerância de volume ultrapassado (${parts[1]}) ($mant)"
+						ret_check_vol=$VOLUME_DIVERGENT
 					fi
 				else
 					slog 7 "Grandezas divergentes (${parts[2]}) ($bexp)"
-					result=$VOLUME_DIVERGENT
+					ret_check_vol=$VOLUME_DIVERGENT
 				fi
+				break
 			fi
 		done
-		slog 5 "Volume ($alias) não validado."
-		result=$VOLUME_INEXISTS		
 	fi
+	printf -v "$1" "%d" "$ret_check_vol"
+}
 
+function is_volume_ready() {
+	local targetVolID=$2
+	local response volTable line
+	local -i ret_is_volume_ready=1 #Default é falha de volume
 
-	echo "!!!!!!!!!!!! saida da validação = $result "
-	printf -v "$1" "%d" "$result"
+	response=$(qcli_volume -i volumeID="$targetVolID" displayfield=Alias,volumeID,Capacity,Status)
+	volTable=$(tail -n +4 <<<"$response") #pula resumo e cabeçalho da saida
+	declare -a entries
+	while IFS='' read -r line; do
+		entries+=("$line")
+	done <<<"$volTable"
+
+	for line in "${entries[@]}"; do
+		IFS=' ' read -r -a parts <<<"$line"
+		if [[ "${parts[1]}" == "$targetVolID" ]]; then #encontrado no começo da cadeia
+			if [[ "${parts[4]}" == "Ready" ]]; then
+				ret_is_volume_ready=0
+			fi
+			break
+		fi
+	done
+	printf -v "$1" "%d" "$ret_is_volume_ready"
+}
+
+function wait_volume_ready() {
+	local targetVolID=$2
+	local -i ret_wait_volume_ready=1 #Assume falha inicial
+	local -i retries=0
+	while [[ $ret_wait_volume_ready -ne 0 && $retries -lt 120 ]]; do #Equivale a 10 minutos(magic number here)
+		is_volume_ready ret_wait_volume_ready "$targetVolID"
+		if [[ $__IS_DEV_ENV ]]; then
+			echo '#'
+		else
+			echo -n '#'
+		fi		
+		sleep 5
+		((retries++))
+	done
+	echo '.'
+	if [[ $ret_wait_volume_ready ]]; then
+		echo "Volume(#$targetVolID) pronto!" | slog 5
+	else
+		echo "Volume(#$targetVolID) falhou em preparação !!!" | slog 3
+	fi
+	printf -v "$1" "%d" "$ret_wait_volume_ready"
 }
 
 function create_vol() {
@@ -376,17 +416,31 @@ function create_vol() {
 	local sharename=$2
 	local volSize=$3 #180388626432 eg sistema
 
-	local ret
-	check_vol ret "$alias" "$sharename" "$volSize"
-	if [[ $ret -eq $VOLUME_INEXISTS ]]; then
-		slog 5 "Criando o volume, favor aguarde..."
-		qcli_volume -c Alias="$alias" diskID="$diskID" SSDCache=no Threshold=80 \
+	local -i ret_create_vol=0 #Valor padrão(sucesso)
+	check_vol ret_create_vol "$alias" "$sharename" "$volSize"
+	if [[ $ret_create_vol -eq $VOLUME_INEXISTS ]]; then
+		slog 5 "Criando o volume($alias), favor aguarde..."
+		local cmdOut
+		cmdOut=$(qcli_volume -c Alias="$alias" diskID="$diskID" SSDCache=no Threshold=80 \
 			sharename="$sharename" encrypt=no lv_type=1 poolID="$poolID" raidLevel=1 \
-			Capacity="$volSize" Stripe=Disabled | slog 6
+			Capacity="$volSize" Stripe=Disabled)
+		ret_create_vol=$?
+		if [[ $ret_create_vol ]]; then
+			local targetVolID
+			targetVolID=$(echo "$cmdOut" | head -1 | awk '{print $NF}' | tr -d .)
+			echo "Aguardando o volume( $targetVolID ) ficar pronto..."
+			wait_volume_ready ret_create_vol "$targetVolID"
+		fi
+
+		if [[ $ret_create_vol ]]; then
+			slog 5 "Volume $alias (ID=$targetVolID) criado com sucesso!"
+		else
+			echo "Erro fatal criando volume($alias = $targetVolID). Abortando processo..."
+			return $ret_create_vol  #*DEVE se rvalor abaixo de 10
+		fi
 	else
-		if [[ $ret -eq $VOLUME_DIVERGENT ]]; then
+		if [[ $ret_create_vol -eq $VOLUME_DIVERGENT ]]; then
 			slog 3 "Volume com características divergentes foi encontrado!!"
-			echo "Volume de tamanho divergente do solicitado já existe!!"
 			return $VOLUME_DIVERGENT
 		else #VOLUME_OK
 			echo "Volume ($alias) com $volSize bytes de tamanho já existe." | slog 6
@@ -419,22 +473,36 @@ function convertLongShortByteSize() {
 			printf -v "$2" "%s" "$suffix" #retorno expoente
 			#qts 5.1 sem bc, se vira com awk
 			out=$(awk -v size="$size" -v factor="$factor" -v CONVFMT=%.17g "BEGIN{ print (1000*size/factor) }")
-			printf -v "$1" "%d" "$out" #retorno mantissa
+			printf -v "$1" "%.0f" "$out" #retorno mantissa
 			break
 		fi
 	done
 }
 
+function is_package_installed(){
+	local pkgName="$1"
+	local pkgStatus="$2"
+	local qpkg_success
+	qpkg_success="QPKG $pkgName is installed"
+	if [[ "$qpkg_success" == "$pkgStatus"  ]]; then
+		return 0
+	else
+		return 1
+	fi
+	#qpkg_response=$(qpkg_cli -s "$pkgName")
+}
 
-#!Exemplo de saida abaixo
-# [~] # qcli_volume -i
-# Volume Count
-# 7         
-# volumeID poolID Capacity FreeSize Type FileSystem Thin SSDCache Threshold Encrypt Status          Alias    Staticvolume SystemCache Allocated 
-# 1        1      81 GB    65 GB    Data EXT4       yes  no       80 %      --      Ready           sistema  no           Enabled     21 %      
-# 2        1      4 GB     4 GB     Data EXT4       yes  no       80 %      --      Ready           critico  no           Enabled     3 %       
-# 3        1      195 GB   195 GB   Data EXT4       yes  no       80 %      --      Ready           outros   no           Enabled     2 %       
-# 4        1      48 GB    48 GB    Data EXT4       yes  no       80 %      --      Ready           entrada  no           Enabled     2 %       
-# 5        1      0 MB     0 MB     Data --         yes  no       80 %      --      Formatting...   publico  no           --          2 %       
-# 6        1      0 MB     0 MB     Data --         yes  no       80 %      --      Formatting...   restrito no           --          --        
-# 7        -1     0 MB     0 MB     Data --         no   no       0 %       --      Initializing... backup   yes          --          --        
+function install_package(){
+	local pkgName="$1"
+	local pkgStatus=''
+	
+	while [[ $(is_package_installed "$pkgName" "$pkgStatus") ]]; do
+		local oldStatus="$pkgStatus"
+		pkgStatus=$(qpkg_cli -s "$pkgName")
+
+
+	done
+
+	pkgStatus=$(qpkg_cli -s "$pkgName")
+
+}

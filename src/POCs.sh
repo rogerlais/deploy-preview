@@ -15,7 +15,6 @@ function test_get_files_list_b3() {
 
 #*################################################  PONTO DE ENTRADA ###################################################
 
-
 #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 #* import das rotinas auxiliares
 # shellcheck source=/dev/null
@@ -23,16 +22,18 @@ function test_get_files_list_b3() {
 if [[ "( \"sofredor\" , \"IFPB-UBUN2004V1\" )" =~ $(hostname) ]]; then
 	cd "/media/sf_WD/operations/qnap-config/src" || exit
 	source "${PWD}/utilsFuncs.sh"
-	__IS_DEBUG=1 #!Informa que temos depuração agora
-	__IS_DEV_ENV=1  #!Usar dados simulados a partir de arquivos
+	#*Flags globais ajustadas após carga dos padrões em utilsFuncs.sh
+	__IS_DEBUG=1          #!Informa que temos depuração agora
+	__IS_DEV_ENV=1        #!Usar dados simulados a partir de arquivos
+	switch_simulated_qcli #!as chamadas serão todas simuladas com as respostas montadas internamente
 else
 	source "${PWD}/utilsFuncs.sh"
-	__IS_DEBUG=0 
-	__IS_DEV_ENV=0 
+	#*Flags globais ajustadas após carga dos padrões em utilsFuncs.sh
+	__IS_DEBUG=0
+	__IS_DEV_ENV=0
 fi
 LC_NUMERIC="en_US.UTF-8"
 #*Final dos dados globais
-
 
 #* Parte comum a todos os testes = autenticação
 declare ret=0
@@ -43,35 +44,22 @@ else
 	echo "$ret" | slog 3
 fi
 
+#!DEPURAÇÃO A POSTERIORI FORÇADA
+__IS_DEBUG=1 #!Informa que temos depuração agora
+#__IS_DEV_ENV=1 #!Usar dados simulados a partir de arquivos
+
+#* Criação do Pool primário(único)
+create_pool
+ret=$?
+if ! [[ $ret ]]; then
+	echo "Erro criando pool primário $ret" | slog 3
+	exit $ret
+fi
+
+#* Tamanho do Pool primário existente
+declare poolSize
+get_pool_size poolSize
+echo "Encontrado um pool com $poolSize"
+
+#* Criação dos volumes
 create_volumes "${PWD}/volumes.json"
-
-exit
-
-#valores em human-readble to integer
-echo "\"convertShortLongByteSize \"123.5	 TB\"\""
-val=$(convertShortLongByteSize "123.5	 TB") #spaces & tabs at sample
-echo "Valor bruto flututante: $val bytes"
-echo "Valor bruto inteiro: $(truncToInt "$val") bytes"
-
-totalPoolSize=$(get_pool_size "1")
-echo "Resultado de get_pool_size \"1\": $totalPoolSize"
-echo "Resultado de get_pool_size em bytes \"1\": $( (convertShortLongByteSize "${totalPoolSize}"))"
-
-exit 0
-
-#Valores inteiros absolutos a partir do percentual do tamanho total
-dspValue=$(get_abs_value "2342342" "12.5")
-echo "Resultado de get_abs_value \"2342342\" \"12.5\" : $dspValue"
-
-dspValue=$(get_pool_size "1")
-echo "Resultado de get_pool_size \"1\": $dspValue"
-
-
-#todo inciar montagem menu seleção abaixo
-# declare -a G_RET_A=()
-# get_files_list_b3 G_RET_A "$PWD" "json"
-# echo -e "Retorno \n ${G_RET_A[@]}"
-# for ((i=0;i<"${#G_RET_A[@]}";++i)); do
-#     printf "%s\n" "${G_RET_A[$i]%$'\n'}"
-# done
-# unset G_RET_A

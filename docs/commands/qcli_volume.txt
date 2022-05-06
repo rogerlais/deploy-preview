@@ -1,0 +1,12 @@
+#!Exemplo de saida abaixo
+# [~] # qcli_volume -i
+# Volume Count
+# 7
+# volumeID poolID Capacity FreeSize Type FileSystem Thin SSDCache Threshold Encrypt Status          Alias    Staticvolume SystemCache Allocated
+# 1        1      81 GB    65 GB    Data EXT4       yes  no       80 %      --      Ready           sistema  no           Enabled     21 %
+# 2        1      4 GB     4 GB     Data EXT4       yes  no       80 %      --      Ready           critico  no           Enabled     3 %
+# 3        1      195 GB   195 GB   Data EXT4       yes  no       80 %      --      Ready           outros   no           Enabled     2 %
+# 4        1      48 GB    48 GB    Data EXT4       yes  no       80 %      --      Ready           entrada  no           Enabled     2 %
+# 5        1      0 MB     0 MB     Data --         yes  no       80 %      --      Formatting...   publico  no           --          2 %
+# 6        1      0 MB     0 MB     Data --         yes  no       80 %      --      Formatting...   restrito no           --          --
+# 7        -1     0 MB     0 MB     Data --         no   no       0 %       --      Initializing... backup   yes          --          --

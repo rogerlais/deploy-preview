@@ -1,0 +1,105 @@
+[~] # qpkg_cli -a HybridBackup | tee -a logNAS.txt                                                                                            
+[CLI] QPKG HybridBackup is queuing
+[~] # qpkg_cli -h                                 
+QPKGD Client Utility 
+Usage: 
+ qpkg_cli [command] [parameter]
+
+ QPKG operation:
+        -a, --add [name]                 add QPKG (download and install)
+            --enable [name]              enable QPKG
+            --disable [name]             disable QPKG
+            --start [name]               start QPKG
+            --stop [name]                stop QPKG
+        -R, --remove [name]              remove QPKG
+        -C, --clean [name]               clean notice of QPKG, make sure you will call it to clean notice before you leave
+        -g, --download [name]            download QPKG
+        -m, --manually [path]            install QPKG from specified path 
+        -c, --cancel [name]              stop QPKG job (enable/disable/download/installation)
+        -k, --stop_all                   stop all job
+        -s, --status [name]              get QPKG status
+        -l, --list                       get QPKG list in queue
+
+ QPKG install option:
+        -u, --url [url]                  install QPKG from specified URL
+        -v, --signature [url]            verify signature
+        -x, --rss_id [id]                specify 3rd id
+        -L, --lang [language]            specify language of rss
+        -w, --class [value]              specify class level
+        -q, --quiet                      quiet mode, don't write status to config and don't send notify
+        -n, --notify                     use with '-q' to enable sending notify 
+        -K, --keep                       keep file when option '-m'
+        -M, --must                       must install.(ex: QVPN) if install fail, report to QTS.
+        -W, --wait_boot_done             install qpkg until system booting finish, (max wait time is 600 secs)
+            --update_dependency          update all dependency qpkg
+        -o, --option                     to keep or restore 1:config 2:data 
+        -A, --ignore_cert                        to ignore code signing check 
+
+ Log inforation:
+            --log_ip                     ip address of client
+            --log_user                   user name of client 
+            --log_comp                   computer name of client 
+
+ QPKG related function:
+        -U, --update_all                 According to [App Center]> [Setting]> [Update], it will update the new version of all installed QPKG 
+                                         or update required update QPKG or send update notice
+        -V, --check_version              scan all installed qpkg, and disable it if QTS is not supported 
+        -E, --check_license              scan all installed qpkg, and disable it if license is invalid 
+        -O, --check_official [value]     scan all installed qpkg, and disable unoffiicial QPKG. while value = 1, run qpkg stop script 
+        -p  --probe [name]               check dependency list of specified list with opcode
+                    --type [opcode]      opcode to probe qpkg
+            --qm_dir [path]              set environment qm_dir = path
+        -G  --upgradable [name]          check qpkg can be upgrade, name=all means list all qpkg which can be upgrade
+                                         0:can upgrade
+                                         1:can not upgrade
+                                         2:error
+                                         3:can not get rss information
+                                         4:qpkg not found
+                                         5:qpkg not installed
+
+ Volume Select: Please make sure the specify QPKG support this function
+        -P, --path [path]                the path QPKG install to
+        -I, --volume [ID]                the volume QPKG install to (We will auto append ".qpkg").
+                                         for example: /share/CACHEDEV1_DATA/.qpkg 
+
+ Debug
+        -D, --Debug [level]              set debug level. 1: write to stderr. 2: write to /var/log/log.qpkg 
+
+ Example
+        (1) download and install QPKG. (make sure QPKG is available to download)
+        qpkg_cli -a $name 
+
+        (2) install QPKG from file. (Remove file after installing)
+        qpkg_cli -m $file 
+
+        (3) install QPKG from file without write log and keep file (for build-in QPKG)
+        qpkg_cli -m $file -q --keep 
+
+
+
+[~] # qpkg_cli -s HybridBackup                                                                                                                
+[CLI] QPKG HybridBackup is in installation stage 2 
+[~] # qpkg_cli -s HybridBackup
+[CLI] QPKG HybridBackup is installed
+[~] # qpkg_cli -a HybridBackup
+[CLI] QPKG HybridBackup is queuing
+[~] # qpkg_cli -s HybridBackup
+[CLI] QPKG HybridBackup download 36 %
+[~] # qpkg_cli -s HybridBackup
+[CLI] QPKG HybridBackup download 100 %
+[~] # qpkg_cli -s HybridBackup
+[CLI] QPKG HybridBackup is in installation stage 0 
+[~] # qpkg_cli -s HybridBackup
+[CLI] QPKG HybridBackup is in installation stage 0 
+[~] # qpkg_cli -s HybridBackup
+[CLI] QPKG HybridBackup is in installation stage 0 
+[~] # qpkg_cli -s HybridBackup
+[CLI] QPKG HybridBackup is in installation stage 0 
+[~] # qpkg_cli -s HybridBackup
+[CLI] QPKG HybridBackup is in installation stage 0 
+[~] # qpkg_cli -s HybridBackup
+[CLI] QPKG HybridBackup is in installation stage 0 
+[~] # qpkg_cli -s HybridBackup
+[CLI] QPKG HybridBackup is in installation stage 2 
+[~] # qpkg_cli -s HybridBackup
+[CLI] QPKG HybridBackup is installed

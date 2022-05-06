@@ -1,0 +1,9 @@
+Volume Count
+1         
+Alias       Capacity 
+sistema     81 GB 
+critico     81 GB 
+outros      81 GB 
+publico     81 GB 
+backup<r>   81 GB 
+restrito    81 GB 

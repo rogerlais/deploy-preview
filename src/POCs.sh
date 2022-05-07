@@ -23,14 +23,14 @@ if [[ "( \"sofredor\" , \"IFPB-UBUN2004V1\" )" =~ $(hostname) ]]; then
 	cd "/media/sf_WD/operations/qnap-config/src" || exit
 	source "${PWD}/utilsFuncs.sh"
 	#*Flags globais ajustadas após carga dos padrões em utilsFuncs.sh
-	__IS_DEBUG=1          #!Informa que temos depuração agora
-	__IS_DEV_ENV=1        #!Usar dados simulados a partir de arquivos
+	__IS_DEBUG=0          #!Informa que temos depuração agora
+	__IS_DEV_ENV=0        #!Usar dados simulados a partir de arquivos
 	switch_simulated_qcli #!as chamadas serão todas simuladas com as respostas montadas internamente
 else
 	source "${PWD}/utilsFuncs.sh"
 	#*Flags globais ajustadas após carga dos padrões em utilsFuncs.sh
-	__IS_DEBUG=0
-	__IS_DEV_ENV=0
+	__IS_DEBUG=1
+	__IS_DEV_ENV=1
 fi
 LC_NUMERIC="en_US.UTF-8"
 #*Final dos dados globais
@@ -47,6 +47,10 @@ fi
 #!DEPURAÇÃO A POSTERIORI FORÇADA
 __IS_DEBUG=1 #!Informa que temos depuração agora
 #__IS_DEV_ENV=1 #!Usar dados simulados a partir de arquivos
+
+install_package ret "HybridBackup"
+
+exit
 
 #* Criação do Pool primário(único)
 create_pool

@@ -6,8 +6,8 @@
 # set verbose level to info
 __VERBOSE=7                 #Nível de verbosidade mínimo para registro
 __LOG_FILE="/tmp/roger.log" #Local para saída dos logs
-__IS_DEBUG=0                #Global para identificar se roda como depuração
-__IS_DEV_ENV=0              #Global para usar dados simulados
+__IS_DEBUG=0                #Global para identificar se roda como depuração #! Usa a lógica negativa do BASH(0 = sim)
+__IS_DEV_ENV=0              #Global para usar dados simulados - #! Usa a lógica negativa do BASH(0 = sim)
 
 declare -a LOG_LEVELS
 # https://en.wikipedia.org/wiki/Syslog#Severity_level
@@ -74,6 +74,38 @@ VOLUME_DATA=$(
 function switch_simulated_qcli() {
 	# shellcheck source=/dev/null
 	source "${PWD}/qcli_simulated.sh"
+}
+
+function get_prompt_confirmation() {
+	local ret_prompt_confirmation="$1"
+	local screenPrompt="$2"
+	local availbleOptions="$3"
+	echo -n "$screenPrompt($availbleOptions):" >&2 #não inserir na saída do método
+	ret_prompt_confirmation=$(get_key_press "$availbleOptions")
+	printf -v "$1" "%s" "$ret_prompt_confirmation"
+}
+
+function get_key_press() {
+	local validCharSet="$1"
+	local defaultResult="$2"
+	local caseSensitive="$3"
+	local ret_get_key_press=''
+	while [[ -z $ret_get_key_press ]]; do
+		read -rsn1 ret_get_key_press
+		if [[ ! $caseSensitive ]]; then
+			#validCharSet=${validCharSet^^}  #*BASH > 4
+			validCharSet=$(tr '[:lower:]' '[:upper:]' <<<"${validCharSet}") #* BASH < 4
+			#ret_get_key_press=${ret_get_key_press^^}
+			ret_get_key_press=$(tr '[:lower:]' '[:upper:]' <<<"${ret_get_key_press}")
+		fi
+		if ! [[ "$validCharSet" == *"$ret_get_key_press"* ]]; then #Valor fora do conjunto -> tentar de novo caso inexista default
+			ret_get_key_press=''
+		fi
+		if [[ -z $ret_get_key_press && -n $defaultResult ]]; then
+			ret_get_key_press=${defaultResult}
+		fi
+	done
+	echo "$ret_get_key_press"
 }
 
 function create_secondary_share() {
@@ -396,7 +428,7 @@ function wait_volume_ready() {
 			echo '#'
 		else
 			echo -n '#'
-		fi		
+		fi
 		sleep 5
 		((retries++))
 	done
@@ -436,7 +468,7 @@ function create_vol() {
 			slog 5 "Volume $alias (ID=$targetVolID) criado com sucesso!"
 		else
 			echo "Erro fatal criando volume($alias = $targetVolID). Abortando processo..."
-			return $ret_create_vol  #*DEVE se rvalor abaixo de 10
+			return $ret_create_vol #*DEVE se rvalor abaixo de 10
 		fi
 	else
 		if [[ $ret_create_vol -eq $VOLUME_DIVERGENT ]]; then
@@ -479,12 +511,12 @@ function convertLongShortByteSize() {
 	done
 }
 
-function is_package_installed(){
+function is_package_installed() {
 	local pkgName="$1"
-	local pkgStatus="$2"
-	local qpkg_success
+	local pkgStatus qpkg_success
 	qpkg_success="QPKG $pkgName is installed"
-	if [[ "$qpkg_success" == "$pkgStatus"  ]]; then
+	pkgStatus=$(qpkg_cli -s "$pkgName")
+	if [[ "$qpkg_success" == "$pkgStatus" ]]; then
 		return 0
 	else
 		return 1
@@ -492,17 +524,41 @@ function is_package_installed(){
 	#qpkg_response=$(qpkg_cli -s "$pkgName")
 }
 
-function install_package(){
-	local pkgName="$1"
+function install_package() {
+	local ret_install_package="$1"
+	local pkgName="$2"
+	local -i retries=0
 	local pkgStatus=''
-	
-	while [[ $(is_package_installed "$pkgName" "$pkgStatus") ]]; do
-		local oldStatus="$pkgStatus"
-		pkgStatus=$(qpkg_cli -s "$pkgName")
-
-
-	done
-
-	pkgStatus=$(qpkg_cli -s "$pkgName")
-
+	if ! [[ $(is_package_installed "$pkgName" "$pkgStatus") ]]; then
+		pkgStatus=$(qpkg_cli -a "$pkgName") #inicia processo de instalação do pacote
+		echo "$pkgStatus" | slog -6
+		if [[ $__IS_DEV_ENV ]]; then 
+			sleep 10
+		fi
+		while [[ ! $(is_package_installed "$pkgName" "$pkgStatus") ]]; do
+			local oldStatus="$pkgStatus"
+			pkgStatus=$(qpkg_cli -s "$pkgName")
+			if [[ "$oldStatus" != "$pkgStatus" ]]; then
+				echo "$pkgStatus"
+				oldStatus="$pkgStatus"
+			fi
+			((retries++))
+			if [[ $retries -gt 60 ]]; then 
+				echo "Estouro do tempo de espera para o processo de instalação"
+				local promptAnswer
+				get_prompt_confirmation promptAnswer "Deseja aguardar mais algum tempo(S/N)?" 'SN'
+				if [[ 'Ss' == *"$promptAnswer"* ]]; then
+					retries=0 #comecar de novo
+				else	
+					ret_install_package=1  #flag de falha
+					echo "Instalação de ($pkgName) abortada pelo usuário.!!!" | slog 3
+					break
+				fi
+			fi
+			sleep 5
+		done
+	else
+		echo "Pacote $pkgName já está instalado" | slog 5
+	fi
+	printf -v "$1" "%d" "$ret_install_package"
 }

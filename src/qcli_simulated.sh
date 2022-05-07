@@ -1,8 +1,34 @@
 #!/bin/bash
 
 #Contador de etapas para simulação de instalação de apps
-declare -i CLI_QPKG_INSTALL=-1
-declare -i GLOBAL_PROGRESS=50
+export SUBSHL_BOSTA_STEP
+SUBSHL_BOSTA_STEP=$(mktemp)
+export SUBSHL_BOSTA_PROGRESS
+SUBSHL_BOSTA_PROGRESS=$(mktemp)
+
+
+function get_install_progress(){
+    if ! [ -s "$SUBSHL_BOSTA_PROGRESS" ]; then
+        echo "0" >"$SUBSHL_BOSTA_PROGRESS"
+    fi
+    cat "$SUBSHL_BOSTA_PROGRESS"
+}
+
+function set_install_progress() {
+    echo "$1" >"$SUBSHL_BOSTA_PROGRESS"
+}
+
+
+function get_install_step() {
+    if ! [ -s "$SUBSHL_BOSTA_STEP" ]; then
+        echo "0" >"$SUBSHL_BOSTA_STEP"
+    fi
+    cat "$SUBSHL_BOSTA_STEP"
+}
+
+function set_install_step() {
+    echo "$1" >"$SUBSHL_BOSTA_STEP"
+}
 
 function qcli() {
     if [[ "$*" == '-l user=admin pw=12345678 saveauthsid=yes' ]]; then
@@ -51,22 +77,45 @@ function qcli_sharedfolder() {
 }
 
 function qpkg_cli() {
-    local response
-    responseSet=(
-        "invalid QPKG $2"   #Não usar nos testes da flag (-s)
-        "QPKG $2 not found"
-        "QPKG $2 is queuing"
-        "QPKG $2 download $GLOBAL_PROGRESS %"
-        "QPKG HybridBackup is in installation stage 0"
-        "QPKG HybridBackup is in installation stage 1"
-        "QPKG HybridBackup is in installation stage 2"
-        "QPKG $2 is installed"
+    local response_qpkg_cli progress
+    progress=$(get_install_progress)
+    local -a responseSet=(
+        "invalid QPKG $2"                              #(0) - #* Não usar nos testes da flag (-s)
+        "QPKG $2 not found"                            #(1)
+        "QPKG $2 is queuing"                           #(2)
+        "QPKG $2 download $progress %"          #(3)
+        "QPKG HybridBackup is in installation stage 0" #(4)
+        "QPKG HybridBackup is in installation stage 1" #(5)
+        "QPKG HybridBackup is in installation stage 2" #(6)
+        "QPKG $2 is installed"                         #(7)
     )
+
+    local step
+    step=$(get_install_step)
     if [[ "$1" == '-s' ]]; then #info de shares
-        ((CLI_QPKG_INSTALL++))
-        response="${responseSet[$CLI_QPKG_INSTALL]}"
-    elif [[ "$1" == '-a' ]]; then #comando para a criação de um share
-        response=""
+        case $step in
+        0)
+            ((step++))
+            #####step=3 #! TESTE DE AVALAIÇÂO
+            ;;
+        1) #nada alterado
+            ;;
+        2)
+            ((step++))
+            ;;
+        3)
+            progress=$((progress + 10))
+            set_install_progress "$progress"
+            if [[ progress -gt 100 ]]; then
+                step=4                
+            fi
+            ;;
+        esac
+        response_qpkg_cli="${responseSet[$step]}"
+    elif [[ "$1" == '-a' ]]; then #*Instalação
+        step=2
+        response_qpkg_cli="${responseSet[$step]}"
     fi
-    echo "$response"
+    set_install_step "$step"    
+    echo "$response_qpkg_cli"
 }

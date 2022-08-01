@@ -1,3 +1,5 @@
+////lixo para conversão para windows 1252
+
 [Base de conhecimento]
 https://www.qnap.com/en/how-to/knowledge-base
 

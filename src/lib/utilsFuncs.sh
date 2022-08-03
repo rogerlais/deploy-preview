@@ -73,6 +73,32 @@ VOLUME_DATA=$(
 	END
 )
 
+
+function setDeviceName() {
+    local retf="$1"
+    local newName="$APP_NAS_HOSTNAME" #was an argument, now uses global
+    local curName
+    curName=$(getcfg system "Server Name")
+    echo "Novo nome=($newName) - Nome antigo=($curName)"
+    if [ "$newName" != "$curName" ]; then
+        echo "Alterando o nome do dispositivo para ($newName)..."
+        setcfg system "Server Name" "$newName" #* em testes, tal chamada aceita praticamente tudo sem gerar erro
+        #todo:future: informar no comentário sobre este servidor para exibição, demais dados, como cidade, etc(agora usando apenas valor de newName)
+        setcfg system "Server Comment" "$newName"
+        retf=$?
+        if [ $retf -ne 0 ]; then
+            echo "Falha renomeando dispositivo - erro: $retf"
+        else
+            echo "Nome do dispositivo alterado de ($curName) para ($newName)"
+        fi
+    else
+        slog 6 "Nome atual já corretamente atribuído para: $newName"
+        retf=0
+    fi
+    printf -v "$1" "%d" $retf
+}
+
+
 function read_confirm_input() {
 	local retf="$1"
 	local prompt="$2"

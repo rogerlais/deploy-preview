@@ -1,9 +1,0 @@
-Esse comando altera o arquivo caminho etc/config/uLinux.conf
-
-setcfg System 'Server Name' ZPB091NAS012
-
-setcfg Network 'DNS type' manual
-
-setcfg Network 'Domain Name Server 1' 10.12.0.134
-setcfg Network 'Domain Name Server 2' 10.12.0.228
-

@@ -1,9 +1,0 @@
-exemplo como colocar o NAS no Dominio
-
-$qcli_domainsecurity -m NetBIOS=TRE-PB AD_server=PBDC01 domain=tre-pb.gov.br domainusername=xxxx domainpassword=xxxxx
-
-NetBIOS o prefixo do Domínio
-AD_server=PBDC01 controlador de Domínio
-domain=tre-pb.gov.br Nome de Domínio completo
-domainusername=xxxxx usuário de Domínio
-domainpassword=xxxxx senha do usuário de Domínio

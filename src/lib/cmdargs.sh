@@ -1,5 +1,16 @@
 #!/bin/bash
 
+#-----------------
+# How to use:
+# 1 - Import this source
+# 2 - Call read_cl_args() to load key/value and positional arguments to globals variables
+# 3 - Use *resolve_arg_value* to resolve an argument value, based at pair key/value, positional and default
+#*Note: Char '#' is used to differentiate argument positional index from others
+# Example: 
+# user=$( resolve_arg_value 'user' #1 ) #Get value to "user" key ou the first argument passed. If inexistent, an empty string returned
+#-----------------
+
+
 #-------------------
 # Globals
 #-------------------
@@ -11,18 +22,19 @@ export CMD_KEY_ARGS CMD_VAL_ARGS
 declare -a CMD_FLAGS_ARGS
 export CMD_FLAGS_ARGS
 
-#this_file="$(basename "$(test -L "$0" && readlink "$0" || echo "$0")")"
-
 function reset_args() {
     #todo reset all globals( eg. by reload process/env )
+    CMD_KEY_ARGS=()
+    CMD_VAL_ARGS=()
+    CMD_FLAGS_ARGS=()
     return 0
 }
 
-function import_arguments() {
+function read_cl_args() {
     #Processa o array como entrada de linha de comando. Neste método a metodologia considera pares key/value e argumentos livres e flags atomicas('-' como token )
     #Keys are case insensitive
     #flags are case sensitive
-    #* Exemplo import_arguments "$@"
+    #* Exemplo read_cl_args "$@"
     #!bug: keynames as 'user' and 'pwd' are truncated to '' AVOID them
     #Como saída, teremos:
     # 1 - Os pares KEY='value' exportados globalmente(KEY uppercased)
@@ -74,7 +86,7 @@ function resolve_arg_value() {
     if [[ -n "${escapeArg2}" ]]; then
         #try by positional, if $2[0] == '#'
         if [[ "${escapeArg2:0:1}" == '#' ]]; then
-            #!bug linter next line
+            #!bug linter(vs code / bashdb) next line - dont wory about it
             P=$(("${escapeArg2##*#}")) #get string after last '#'(must be number only)
             if ((P < ${#CMD_KEY_ARGS[@]})); then
                 echo "${CMD_VAL_ARGS[$P]}"

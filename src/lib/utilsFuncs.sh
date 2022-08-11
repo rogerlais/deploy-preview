@@ -1,7 +1,9 @@
 #!/bin/bash
 
-#todo: future Implementar, leitura dos parametros dos disco se der tempo e for necessário...
+#todo:future: Implementar leitura dos parametros dos discos e não pedir ao usuário
 #hdparm -I /dev/sda para pegar atributos do disco
+
+#todo:future: Move all Logging operations to a separate file
 
 declare -a LOG_LEVELS
 # https://en.wikipedia.org/wiki/Syslog#Severity_level
@@ -18,61 +20,11 @@ declare VOLUME_DIVERGENT=20
 	DISK_SIZE_3TB=2780160000000
 }
 
-GLOBAL_VERSION=1
-# alias      sharename  volume_size
-# shellcheck disable=SC2034
-VOLUME_DATA=$(
-	cat <<-END
-		[
-		  {
-		    "alias": "sistema",
-		    "shares": [{ "name": "sistema" }],
-		    "size": "90194313216",
-		    "version": "${GLOBAL_VERSION}"
-		  },
-		  {
-		    "alias": "critico",
-		    "shares": [{ "name": "critico" }],
-		    "size": "5368709120",
-		    "version": "${GLOBAL_VERSION}"
-		  },
-		  {
-		    "alias": "outros",
-		    "shares": [
-		      { "name": "suporte" },
-		      { "name": "espelho" }
-		    ],
-		    "size": "214748364800",
-		    "version": "${GLOBAL_VERSION}"
-		  },
-		  {
-		    "alias": "entrada",
-		    "shares": [{ "name": "entrada" }],
-		    "size": "53687091200",
-		    "version": "${GLOBAL_VERSION}"
-		  },
-		  {
-		    "alias": "publico",
-		    "shares": [{ "name": "publico" }],
-		    "size": "53687091200",
-		    "version": "${GLOBAL_VERSION}"
-		  },
-		  {
-		    "alias": "restrito",
-		    "shares": [{ "name": "restrito" }],
-		    "size": "214748364800",
-		    "version": "${GLOBAL_VERSION}"
-		  },
-		  {
-		    "alias": "backup",
-		    "shares": [{ "name": "backup" }],
-		    "size": "1000000000000",
-		    "version": "${GLOBAL_VERSION}"
-		  }
-		]
-	END
-)
-
+function get_scriptname(){
+	#Returnns the base name from script that started this process
+	todo:lib: Move to lib
+	basename "$(test -L "$0" && readlink "$0" || echo "$0")"
+}
 
 function setDeviceName() {
     local retf="$1"

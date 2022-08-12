@@ -62,7 +62,7 @@ fi
 qcli -l user="${APP_USER}" pw="${APP_PWD}" saveauthsid=yes
 success=$?
 if [[ $success ]]; then
-    echo "Fallha durante autenticação da sessão( ${success} )"
+    echo "Falha durante autenticação da sessão( ${success} )"
     exit $success
 fi
 

@@ -20,11 +20,13 @@ fi
 export APP_DBG_DIR
 export APP_LIB_DIR
 
-#Load all dependencies
+# Load dependencies
 # shellcheck source=/dev/null
 source "${APP_LIB_DIR}cmdargs.sh"
 # shellcheck source=/dev/null
 source "${APP_LIB_DIR}utilsFuncs.sh"
+# shellcheck source=/dev/null
+source "${APP_LIB_DIR}basiclog.sh"
 
 #*Shows execution environment
 if env | grep -E "^APP_|^GLOBAL_|^TEST_" >/dev/null; then # "^APP_*" >/dev/null; then

@@ -3,22 +3,9 @@
 #todo:future: Implementar leitura dos parametros dos discos e não pedir ao usuário
 #hdparm -I /dev/sda para pegar atributos do disco
 
-#todo:future: Move all Logging operations to a separate file
+# shellcheck source=/dev/null
+source "${PWD}/basiclog.sh" #Premiss same dir
 
-declare -a LOG_LEVELS
-# https://en.wikipedia.org/wiki/Syslog#Severity_level
-LOG_LEVELS=([0]="emerg" [1]="alert" [2]="crit" [3]="err" [4]="warning" [5]="notice" [6]="info" [7]="debug")
-declare VOLUME_INEXISTS=10
-declare VOLUME_OK=0
-declare VOLUME_DIVERGENT=20
-
-#*constantes para tamanhos de discos esperados(calculo meio furado e aproximado)
-# shellcheck disable=SC2034
-{
-	DISK_SIZE_1TB=926720000000 #referencia base para as demais
-	DISK_SIZE_2TB=1853440000000
-	DISK_SIZE_3TB=2780160000000
-}
 
 function get_scriptname(){
 	#Returnns the base name from script that started this process
@@ -352,23 +339,6 @@ function get_files_list_b3() {
 	else
 		slog 3 "Erro de coleta de arquivos - retorno inválido"
 		G_RET_A=()
-	fi
-}
-
-function slog() {
-	#rotina de registro de logs
-	local LEVEL="$1"
-	shift
-	if [[ ${GLOBAL_VERBOSE_LEVEL} -ge ${LEVEL} ]]; then
-		if [ -t 0 ]; then
-			echo "[${LOG_LEVELS[$LEVEL]}]" "$@" | tee -a "$GLOBAL_LOG_FILE"
-		else
-			if [[ $1 ]]; then
-				echo "[${LOG_LEVELS[$LEVEL]}] $1" | tee -a "$GLOBAL_LOG_FILE"
-			else
-				echo "[${LOG_LEVELS[$LEVEL]}] $(cat)" | tee -a "$GLOBAL_LOG_FILE"
-			fi
-		fi
 	fi
 }
 
